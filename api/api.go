@@ -1,10 +1,10 @@
 package api
 
 import (
-	"boilerplate/middleware"
 	"fmt"
 	"net/http"
 
+	"github.com/HarshThakur1509/boilerplate/middleware"
 	"github.com/rs/cors"
 )
 

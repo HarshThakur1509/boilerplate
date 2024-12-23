@@ -1,8 +1,8 @@
 package main
 
 import (
-	"boilerplate/api"
-	"boilerplate/initializers"
+	"github.com/HarshThakur1509/boilerplate/api"
+	"github.com/HarshThakur1509/boilerplate/initializers"
 )
 
 func init() {
