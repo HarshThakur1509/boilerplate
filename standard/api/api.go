@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/HarshThakur1509/boilerplate/middleware"
+	"github.com/HarshThakur1509/boilerplate/standard/middleware"
 	"github.com/rs/cors"
 )
 
