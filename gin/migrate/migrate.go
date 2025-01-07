@@ -8,7 +8,7 @@ func init() {
 }
 
 func main() {
-	//Add code here
+	// Add code here
 	initializers.DB.AutoMigrate()
 
 }
