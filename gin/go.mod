@@ -1,6 +1,6 @@
 module github.com/HarshThakur1509/gin-gorm-api
 
-go 1.23.2
+go 1.23.4
 
 require (
 	github.com/HarshThakur1509/boilerplate/gin v0.0.0-20250107075631-525470c536bf
