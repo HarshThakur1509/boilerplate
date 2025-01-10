@@ -1,5 +1,6 @@
 services:
   api:
+    # image: gin:1.0
     build:
       context: .
       dockerfile: Dockerfile
