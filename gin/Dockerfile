@@ -1,4 +1,3 @@
-
 # Use an official Golang image as a builder
 FROM golang:1.23.4 AS builder
 
@@ -9,33 +8,28 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the application source code
+# Copy the application source code and entrypoint script
 COPY . .
+COPY entrypoint.sh entrypoint.sh
 
-# Build the application as a static binary
+# Build the main application and migration tool
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o migrate migrate/migrate.go
 
-
-# Use a minimal image to run the application
+# Use a minimal image for the final stage
 FROM alpine:3.21
 
-# Install necessary runtime tools
-RUN apk add --no-cache bash curl
+WORKDIR /app
 
-# Set the working directory
-WORKDIR /root/
-
-# Copy the compiled binary from the builder
+# Copy the compiled binaries and entrypoint script from builder
 COPY --from=builder /app/main .
+COPY --from=builder /app/migrate .
+COPY --from=builder /app/entrypoint.sh .
 
-# Ensure the binary is executable
-RUN chmod +x ./main
+# Make files executable
+RUN chmod +x ./main ./migrate ./entrypoint.sh
 
-# Expose the application port
 EXPOSE 3000
 
-# Command to run the application
-CMD ["./main"]
-
-
-
+# Use the entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]
