@@ -1,9 +1,8 @@
 module github.com/HarshThakur1509/boilerplate/standard
 
-go 1.23.4
+go 1.23.5
 
 require (
-	github.com/joho/godotenv v1.5.1
 	github.com/rs/cors v1.11.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
