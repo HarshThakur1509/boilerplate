@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/HarshThakur1509/boilerplate/standard/controllers"
 	"github.com/HarshThakur1509/boilerplate/standard/middleware"
 	"github.com/rs/cors"
 )
@@ -19,6 +20,7 @@ func NewApiServer(addr string) *ApiServer {
 func (s *ApiServer) Run() error {
 	router := http.NewServeMux()
 
+	router.HandleFunc("GET /health", controllers.Health)
 	// Add code here
 
 	stack := middleware.MiddlewareChain(middleware.Logger, middleware.RecoveryMiddleware)

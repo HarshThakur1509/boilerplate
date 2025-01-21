@@ -14,6 +14,10 @@ var DB *gorm.DB
 func ConnectDB() {
 	var err error
 
+	config := &gorm.Config{
+		PrepareStmt: true, // Enable statement caching
+	}
+
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
@@ -21,7 +25,7 @@ func ConnectDB() {
 	dbPort := os.Getenv("DB_PORT")
 
 	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable", dbHost, dbUser, dbPassword, dbName, dbPort)
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), config)
 
 	if err != nil {
 		log.Fatal(DB, "Failed to connect to database")

@@ -1,6 +1,10 @@
 package main
 
-import "github.com/HarshThakur1509/boilerplate/standard/initializers"
+import (
+	"log"
+
+	"github.com/HarshThakur1509/boilerplate/standard/initializers"
+)
 
 func init() {
 	initializers.ConnectDB()
@@ -8,7 +12,14 @@ func init() {
 
 func main() {
 
+	log.Println("Starting database migrations...")
+
 	// Add code here
 
-	initializers.DB.AutoMigrate()
+	err := initializers.DB.AutoMigrate()
+	if err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	log.Println("Database migrations completed successfully!")
 }
