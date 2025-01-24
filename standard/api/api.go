@@ -6,6 +6,7 @@ import (
 
 	"github.com/HarshThakur1509/boilerplate/standard/controllers"
 	"github.com/HarshThakur1509/boilerplate/standard/middleware"
+	"github.com/markbates/goth/gothic"
 	"github.com/rs/cors"
 )
 
@@ -21,7 +22,23 @@ func (s *ApiServer) Run() error {
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /health", controllers.Health)
+
+	// USER AUTHENTICATION
+
+	router.HandleFunc("POST /login", controllers.CustomLogin)
+	router.HandleFunc("POST /register", controllers.CustomRegister)
+
+	router.HandleFunc("GET /auth", gothic.BeginAuthHandler)
+	router.HandleFunc("GET /auth/callback", controllers.GoogleCallbackHandler)
+
 	// Add code here
+
+	authRouter := http.NewServeMux()
+	authRouter.HandleFunc("GET /auth/logout", controllers.GothLogout)
+	authRouter.HandleFunc("GET /validate", controllers.ValidateUser)
+	authRouter.HandleFunc("GET /api/user", controllers.GetUser)
+
+	router.Handle("/", middleware.AuthMiddleware(authRouter))
 
 	stack := middleware.MiddlewareChain(middleware.Logger, middleware.RecoveryMiddleware)
 
@@ -29,7 +46,12 @@ func (s *ApiServer) Run() error {
 		AllowedOrigins:   []string{"http://localhost:5173"}, // Specify your React frontend origin
 		AllowCredentials: true,                              // Allow cookies and credentials
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowedHeaders: []string{
+			"Content-Type",
+			"Authorization",
+			"Accept",
+			"Origin",
+			"X-Requested-With"},
 	}).Handler(stack(router))
 
 	server := http.Server{

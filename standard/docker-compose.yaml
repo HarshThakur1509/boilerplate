@@ -4,16 +4,19 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - DB_USER=$DB_USER
-      - DB_PASSWORD=$DB_PASSWORD
-      - DB_NAME=$DB_NAME
-      - DB_HOST=$DB_HOST
-      - DB_PORT=$DB_PORT
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
+    restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -22,17 +25,17 @@ services:
 
   postgres:
     image: postgres:17
-    restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - ${DB_PORT}:${DB_PORT}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    restart: always
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -30,4 +30,4 @@ RUN chmod +x ./main ./migrate
 EXPOSE 3000
 
 # Run migrations and start the application
-CMD ./migrate && ./main
+CMD ["sh", "-c", "./migrate && ./main"]
