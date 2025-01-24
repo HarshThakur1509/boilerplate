@@ -1,6 +1,5 @@
 services:
-  api:
-    # image: standard:1.0
+  server:
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,7 +21,7 @@ services:
       retries: 3
 
   postgres:
-    image: postgres
+    image: postgres:17
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
