@@ -10,26 +10,24 @@ RUN go mod download
 
 # Copy the application source code and entrypoint script
 COPY . .
-COPY entrypoint.sh entrypoint.sh
 
 # Build the main application and migration tool
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o migrate migrate/migrate.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main . && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o migrate migrate/migrate.go
 
 # Use a minimal image for the final stage
 FROM alpine:3.21
 
 WORKDIR /app
 
-# Copy the compiled binaries and entrypoint script from builder
+# Copy the compiled binaries from builder
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrate .
-COPY --from=builder /app/entrypoint.sh .
 
 # Make files executable
-RUN chmod +x ./main ./migrate ./entrypoint.sh
+RUN chmod +x ./main ./migrate
 
 EXPOSE 3000
 
-# Use the entrypoint script
-ENTRYPOINT ["./entrypoint.sh"]
+# Run migrations and start the application
+CMD ./migrate && ./main
