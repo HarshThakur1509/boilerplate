@@ -10,25 +10,44 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
-type wrappedWrite struct {
+type responseWriterWrapper struct {
 	http.ResponseWriter
-	statusCode int
+	status      int
+	wroteHeader bool
 }
 
-func (w *wrappedWrite) writeHeader(statusCode int) {
-	w.ResponseWriter.WriteHeader(statusCode)
-	w.statusCode = statusCode
+func (w *responseWriterWrapper) WriteHeader(code int) {
+	if w.wroteHeader {
+		return
+	}
+	w.status = code
+	w.ResponseWriter.WriteHeader(code)
+	w.wroteHeader = true
 }
 
+// LoggingMiddleware logs incoming HTTP requests
 func Logger(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		wrapped := &wrappedWrite{
-			ResponseWriter: w,
-			statusCode:     http.StatusOK,
-		}
+
+		// Wrap the response writer to capture the status code
+		wrapped := &responseWriterWrapper{ResponseWriter: w, status: http.StatusOK}
+
+		// Process the request
 		next.ServeHTTP(wrapped, r)
-		log.Println(wrapped.statusCode, r.Method, r.URL.Path, time.Since(start))
+
+		// Calculate duration
+		duration := time.Since(start)
+
+		// Log request details
+		log.Printf(
+			"method=%s path=%s remote_addr=%s status=%d duration=%s",
+			r.Method,
+			r.URL.Path,
+			r.RemoteAddr,
+			wrapped.status,
+			duration,
+		)
 	}
 }
 

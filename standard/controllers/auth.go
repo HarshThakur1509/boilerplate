@@ -101,14 +101,21 @@ func CustomLogin(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"message": "Login successful"})
 }
 
-func ValidateUser(w http.ResponseWriter, r *http.Request) {
-	// Get user from the context
-	userID := r.Context().Value("userID")
+func GetCookie(w http.ResponseWriter, r *http.Request) {
+	// Retrieve user ID from the session
+	userID, err := gothic.GetFromSession("user_id", r)
+	if err != nil || userID == "" {
+		// Return an empty JSON response
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(map[string]interface{}{"exists": false})
+		return
+	}
 
 	// Return an empty JSON response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]interface{}{"userID": userID})
+	json.NewEncoder(w).Encode(map[string]interface{}{"exists": true, "userID": userID})
 }
 
 // OAUTH AUTHENTICATION
