@@ -15,19 +15,18 @@ services:
       - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
       - REDIRECT_SECURE=${REDIRECT_SECURE}
       - SESSION_COOKIE_DOMAIN=${SESSION_COOKIE_DOMAIN}
-    env_file:
-      - .env
     ports:
       - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
-    restart: always
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
+      start_period: 10s
 
   postgres:
     image: postgres:17
@@ -36,15 +35,16 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - ${DB_PORT}:${DB_PORT}
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    restart: always
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
 volumes:
   postgres-data:

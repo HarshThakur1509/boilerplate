@@ -10,14 +10,12 @@ services:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - SECRET=${SECRET}
-    env_file:
-      - .env
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
-    restart: always
+    restart: unless-stopped
 
   postgres:
     image: postgres:17
@@ -26,15 +24,16 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - ${DB_PORT}:${DB_PORT}
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    restart: always
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
 volumes:
   postgres-data:

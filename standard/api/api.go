@@ -28,6 +28,9 @@ func (s *ApiServer) Run() error {
 	router.HandleFunc("POST /login", controllers.CustomLogin)
 	router.HandleFunc("POST /register", controllers.CustomRegister)
 
+	router.HandleFunc("POST /reset", controllers.ResetPasswordHandler)
+	router.HandleFunc("POST /forgot", controllers.ForgotPasswordHandler)
+
 	router.HandleFunc("GET /auth", gothic.BeginAuthHandler)
 	router.HandleFunc("GET /auth/callback", controllers.GoogleCallbackHandler)
 
