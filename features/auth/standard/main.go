@@ -1,5 +1,3 @@
-func init() {
-	initializers.ConnectDB()
 
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
 	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
@@ -42,4 +40,3 @@ func init() {
 	goth.UseProviders(
 		google.New(clientID, clientSecret, callbackURL, "email", "profile"),
 	)
-}
