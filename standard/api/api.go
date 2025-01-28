@@ -6,7 +6,6 @@ import (
 
 	"github.com/HarshThakur1509/boilerplate/standard/controllers"
 	"github.com/HarshThakur1509/boilerplate/standard/middleware"
-	"github.com/markbates/goth/gothic"
 	"github.com/rs/cors"
 )
 
@@ -23,26 +22,7 @@ func (s *ApiServer) Run() error {
 
 	router.HandleFunc("GET /health", controllers.Health)
 
-	// USER AUTHENTICATION
-
-	router.HandleFunc("POST /login", controllers.CustomLogin)
-	router.HandleFunc("POST /register", controllers.CustomRegister)
-
-	router.HandleFunc("POST /reset", controllers.ResetPasswordHandler)
-	router.HandleFunc("POST /forgot", controllers.ForgotPasswordHandler)
-
-	router.HandleFunc("GET /auth", gothic.BeginAuthHandler)
-	router.HandleFunc("GET /auth/callback", controllers.GoogleCallbackHandler)
-
-	router.HandleFunc("GET /cookie", controllers.GetCookie)
-
 	// Add code here
-
-	authRouter := http.NewServeMux()
-	authRouter.HandleFunc("GET /auth/logout", controllers.GothLogout)
-	authRouter.HandleFunc("GET /api/user", controllers.GetUser)
-
-	router.Handle("/", middleware.AuthMiddleware(authRouter))
 
 	stack := middleware.MiddlewareChain(middleware.Logger, middleware.RecoveryMiddleware)
 
