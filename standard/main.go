@@ -9,6 +9,8 @@ func init() {
 	initializers.LoadEnv()
 	initializers.ConnectDB()
 
+	// Add code here
+
 }
 
 func main() {
