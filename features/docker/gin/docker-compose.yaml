@@ -12,6 +12,8 @@ services:
       - SECRET=${SECRET}
     ports:
       - "8080:8080"
+    networks:
+      - app_net
     depends_on:
       postgres:
         condition: service_healthy
@@ -24,7 +26,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "5432"
+    networks:
+      - app_net
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -38,3 +42,7 @@ services:
 volumes:
   postgres-data:
     driver: local
+
+networks:
+  app_net:
+    driver: bridge
