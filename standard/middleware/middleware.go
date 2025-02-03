@@ -79,7 +79,7 @@ func AuthMiddleware(next http.Handler) http.HandlerFunc {
 
 		// Refresh the session's lifetime
 		session, _ := gothic.Store.Get(r, gothic.SessionName)
-		session.Options.MaxAge = 86400 // Extend by 1 day (adjust as needed)
+		session.Options.MaxAge += 86400 // Extend by 1 day (adjust as needed)
 		err = session.Save(r, w)
 		if err != nil {
 			http.Error(w, "Failed to refresh session", http.StatusInternalServerError)
