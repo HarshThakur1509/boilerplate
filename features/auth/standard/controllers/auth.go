@@ -15,16 +15,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetUser(w http.ResponseWriter, r *http.Request) {
-
-	// Get user from the context
-	userID := r.Context().Value("userID")
+func Validate(w http.ResponseWriter, r *http.Request) {
+	// Retrieve user ID from the session
+	userID, err := gothic.GetFromSession("user_id", r)
 
 	var user models.User
-	initializers.DB.First(&user, "id = ?", userID)
-
-	// Respond with user data
-	json.NewEncoder(w).Encode(user)
+	initializers.DB.First(&user, userID)
+	// Respond with the user information as JSON
+	w.Header().Set("Content-Type", "application/json")
+	userModel, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		return
+	}
+	w.Write(userModel)
 }
 
 // CUSTOM AUTHENTICATION

@@ -15,6 +15,6 @@
 
 	authRouter := http.NewServeMux()
 	authRouter.HandleFunc("GET /auth/logout", controllers.GothLogout)
-	authRouter.HandleFunc("GET /api/user", controllers.GetUser)
+	authRouter.HandleFunc("GET /api/validate", controllers.Validate)
 
 	router.Handle("/", middleware.AuthMiddleware(authRouter))
