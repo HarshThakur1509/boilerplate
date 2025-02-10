@@ -1,20 +1,20 @@
 	// USER AUTHENTICATION
 
-	router.HandleFunc("POST /login", controllers.CustomLogin)
-	router.HandleFunc("POST /register", controllers.CustomRegister)
+	router.HandleFunc("POST /login", handlers.CustomLogin)
+	router.HandleFunc("POST /register", handlers.CustomRegister)
 
-	router.HandleFunc("POST /reset", controllers.ResetPasswordHandler)
-	router.HandleFunc("POST /forgot", controllers.ForgotPasswordHandler)
+	router.HandleFunc("POST /reset", handlers.ResetPasswordHandler)
+	router.HandleFunc("POST /forgot", handlers.ForgotPasswordHandler)
 
 	router.HandleFunc("GET /auth", gothic.BeginAuthHandler)
-	router.HandleFunc("GET /auth/callback", controllers.GoogleCallbackHandler)
+	router.HandleFunc("GET /auth/callback", handlers.GoogleCallbackHandler)
 
-	router.HandleFunc("GET /cookie", controllers.GetCookie)
+	router.HandleFunc("GET /cookie", handlers.GetCookie)
 
 	// Add code here
 
 	authRouter := http.NewServeMux()
-	authRouter.HandleFunc("GET /auth/logout", controllers.GothLogout)
-	authRouter.HandleFunc("GET /api/validate", controllers.Validate)
+	authRouter.HandleFunc("GET /auth/logout", handlers.GothLogout)
+	authRouter.HandleFunc("GET /api/validate", handlers.Validate)
 
 	router.Handle("/", middleware.AuthMiddleware(authRouter))
