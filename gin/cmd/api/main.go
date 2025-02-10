@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/HarshThakur1509/boilerplate/gin/initializers"
+	"myapp/internal/initializers"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func init() {
+	initializers.LoadEnv()
 	initializers.ConnectToDB()
 }
 func main() {

@@ -2,11 +2,11 @@ package main
 
 import (
 	"log"
-
-	"github.com/HarshThakur1509/boilerplate/gin/initializers"
+	"myapp/internal/initializers"
 )
 
 func init() {
+	initializers.LoadEnv()
 	initializers.ConnectToDB()
 }
 
