@@ -2,8 +2,7 @@ package main
 
 import (
 	"log"
-
-	"github.com/HarshThakur1509/boilerplate/standard/initializers"
+	"myapp/internal/initializers"
 )
 
 func init() {

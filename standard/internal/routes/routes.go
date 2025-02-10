@@ -1,10 +1,10 @@
-package api
+package routes
 
 import (
 	"fmt"
+	"myapp/internal/middleware"
 	"net/http"
 
-	"github.com/HarshThakur1509/boilerplate/standard/middleware"
 	"github.com/rs/cors"
 )
 

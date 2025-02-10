@@ -1,4 +1,4 @@
-module github.com/HarshThakur1509/boilerplate/standard
+module myapp
 
 go 1.23.5
 

@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"encoding/json"
@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/HarshThakur1509/boilerplate/standard/initializers"
-	"github.com/HarshThakur1509/boilerplate/standard/models"
 	"github.com/markbates/goth/gothic"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

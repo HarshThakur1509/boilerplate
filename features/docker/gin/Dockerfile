@@ -8,12 +8,12 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the application source code and entrypoint script
+# Copy the application source code 
 COPY . .
 
 # Build the main application and migration tool
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main . && \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o migrate migrate/migrate.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api cmd/api/main.go && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o migrations cmd/migrations/main.go
 
 # Use a minimal image for the final stage
 FROM alpine:3.21
@@ -21,13 +21,13 @@ FROM alpine:3.21
 WORKDIR /app
 
 # Copy the compiled binaries from builder
-COPY --from=builder /app/main .
-COPY --from=builder /app/migrate .
+COPY --from=builder /app/api .
+COPY --from=builder /app/migrations .
 
 # Make files executable
-RUN chmod +x ./main ./migrate
+RUN chmod +x ./api ./migrations
 
 EXPOSE 3000
 
 # Run migrations and start the application
-CMD ["sh", "-c", "./migrate && ./main"]
+CMD ["sh", "-c", "./migrations && ./api"]
