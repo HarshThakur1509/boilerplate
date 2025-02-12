@@ -13,7 +13,7 @@ COPY . .
 
 # Build the main application and migration tool
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api cmd/api/main.go && \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o migrations cmd/migrations/main.go
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o migrations migrations/migrate.go
 
 # Use a minimal image for the final stage
 FROM alpine:3.21
