@@ -140,7 +140,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	initializers.DB.First(&user, "email = ?", body.Email)
 
 	// Generate reset token and set expiration
-	token, err := RandomToken()
+	token, err := utils.RandomToken()
 	if err != nil {
 		http.Error(w, "Unable to generate reset token", http.StatusInternalServerError)
 		return
@@ -154,7 +154,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Simulate email by printing the reset link
 	link := "http://localhost:5173/reset-password?token=" + token
-	SendEmail(user.Email, link)
+	utils.SendEmail(user.Email, link)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Password reset link sent"))
