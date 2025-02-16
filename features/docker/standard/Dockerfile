@@ -1,5 +1,5 @@
 # Use an official Golang image as a builder
-FROM golang:1.23.5 AS builder
+FROM golang:1.24.0 AS builder
 
 # Set the working directory
 WORKDIR /app
