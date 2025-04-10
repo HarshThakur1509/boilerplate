@@ -54,6 +54,16 @@ func CustomRegister(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{Email: body.Email, Password: string(hash), Name: body.Name}
 
+	verify, err := utils.VerifyEmail(user.Email)
+	if err != nil {
+		http.Error(w, "Failed to verify email", http.StatusBadRequest)
+		return
+	}
+	if verify.HostExists == false || verify.Deliverable == false {
+		http.Error(w, "Invalid email", http.StatusBadRequest)
+		return
+	}
+
 	result := initializers.DB.FirstOrCreate(&user, "email = ?", user.Email)
 	if result.Error != nil {
 		http.Error(w, "Failed to Create User", http.StatusBadRequest)
@@ -154,7 +164,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Simulate email by printing the reset link
 	link := "http://localhost:5173/reset-password?token=" + token
-	utils.SendEmail(user.Email, link)
+	utils.SendEmail("example@gmail.com", user.Email, link)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Password reset link sent"))

@@ -5,8 +5,11 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"gopkg.in/gomail.v2"
+
+	emailverifier "github.com/AfterShip/email-verifier"
 )
 
 func RandomToken() (string, error) {
@@ -17,15 +20,43 @@ func RandomToken() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func SendEmail(email string, link string) {
+var (
+	verifier = emailverifier.
+		NewVerifier().
+		EnableSMTPCheck()
+)
+
+func splitEmail(email string) (username, domain string, err error) {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid email format")
+	}
+	return parts[0], parts[1], nil
+}
+
+func VerifyEmail(email string) (*emailverifier.SMTP, error) {
+	username, domain, err := splitEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	ret, err := verifier.CheckSMTP(domain, username)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
+func SendEmail(sender string, receiver string, link string) {
 
 	m := gomail.NewMessage()
 
 	// Set E-Mail sender
-	m.SetHeader("From", "example@gmail.com")
+	m.SetHeader("From", sender)
 
 	// Set E-Mail receivers
-	m.SetHeader("To", email)
+	m.SetHeader("To", receiver)
 
 	// Set E-Mail subject
 	m.SetHeader("Subject", "Reset password")
@@ -34,7 +65,7 @@ func SendEmail(email string, link string) {
 	m.SetBody("text/html", "<a href=\""+link+"\">Reset password</a>")
 
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.gmail.com", 587, "example@gmail.com", "bjcw klus iiht wllh")
+	d := gomail.NewDialer("smtp.gmail.com", 587, sender, "bjcw klus iiht wllh")
 
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
