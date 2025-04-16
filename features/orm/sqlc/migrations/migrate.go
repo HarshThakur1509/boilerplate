@@ -1,141 +1,75 @@
 package main
 
 import (
-	"context"
 	"embed"
+	"flag"
 	"fmt"
 	"log"
 	"myapp/internal/initializers"
-	"sort"
+	"os"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
-//go:embed db/migrations/*.sql
-var migrationsFS embed.FS
-
+// Just load the environment variables, don't connect to DB yet
 func init() {
 	initializers.LoadEnv()
-	initializers.ConnectDB()
 }
+
+//go:embed db/migrations/*.sql
+var migrationFiles embed.FS
 
 func main() {
-	log.Println("Starting database migrations...")
+	// Parse command line flags
+	upFlag := flag.Bool("up", false, "Run migrations up")
+	downFlag := flag.Bool("down", false, "Rollback migrations")
+	versionFlag := flag.Int("version", 0, "Migrate to specific version")
+	flag.Parse()
 
-	// Get connection from pool
-	conn, err := initializers.DB.Acquire(context.Background())
-	if err != nil {
-		log.Fatalf("Failed to acquire connection: %v", err)
-	}
-	defer conn.Release()
+	// Build database connection string from environment variables
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
 
-	// Use the underlying pgx connection
-	err = runMigrations(conn.Conn())
-	if err != nil {
-		log.Fatalf("Migrations failed: %v", err)
-	}
-
-	log.Println("Database migrations completed successfully!")
-}
-
-func runMigrations(conn *pgx.Conn) error {
-	// Create schema_versions table
-	_, err := conn.Exec(context.Background(), `
-		CREATE TABLE IF NOT EXISTS schema_versions (
-			version INT PRIMARY KEY,
-			applied_at TIMESTAMPTZ DEFAULT NOW()
-		)
-	`)
-	if err != nil {
-		return fmt.Errorf("failed to create versions table: %w", err)
+	if dbUser == "" || dbPassword == "" || dbName == "" || dbHost == "" || dbPort == "" {
+		log.Fatal("Missing required database environment variables")
 	}
 
-	// Get current version
-	var currentVersion int
-	err = conn.QueryRow(context.Background(),
-		"SELECT COALESCE(MAX(version), 0) FROM schema_versions").Scan(&currentVersion)
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	// Create a new migrate instance
+	d, err := iofs.New(migrationFiles, "migrations")
 	if err != nil {
-		return fmt.Errorf("failed to get current version: %w", err)
+		log.Fatal("Failed to create migration source:", err)
 	}
 
-	// Read and process migration files
-	migrations, err := readMigrations(currentVersion)
+	m, err := migrate.NewWithSourceInstance("iofs", d, dbURL)
 	if err != nil {
-		return err
+		log.Fatal("Failed to create migrate instance:", err)
 	}
 
-	for _, migration := range migrations {
-		err = executeMigration(conn, migration)
-		if err != nil {
-			return err
+	// Execute the appropriate migration command
+	if *upFlag {
+		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+			log.Fatal("Failed to run migrations:", err)
 		}
-	}
-	return nil
-}
-
-func executeMigration(conn *pgx.Conn, m migration) error {
-	tx, err := conn.Begin(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback(context.Background())
-
-	// Execute migration SQL
-	_, err = tx.Exec(context.Background(), m.sql)
-	if err != nil {
-		return fmt.Errorf("migration %d failed: %w", m.version, err)
-	}
-
-	// Record version
-	_, err = tx.Exec(context.Background(),
-		"INSERT INTO schema_versions (version) VALUES ($1)", m.version)
-	if err != nil {
-		return fmt.Errorf("failed to record version: %w", err)
-	}
-
-	return tx.Commit(context.Background())
-}
-
-type migration struct {
-	version int
-	sql     string
-}
-
-func readMigrations(currentVersion int) ([]migration, error) {
-	var migrations []migration
-
-	// Correct path for ReadDir
-	entries, err := migrationsFS.ReadDir("db/migrations")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read migrations: %w", err)
-	}
-
-	for _, entry := range entries {
-		version := parseVersion(entry.Name())
-		if version > currentVersion {
-			// Correct path for ReadFile
-			content, err := migrationsFS.ReadFile("db/migrations/" + entry.Name())
-			if err != nil {
-				return nil, fmt.Errorf("failed to read migration file: %w", err)
-			}
-
-			migrations = append(migrations, migration{
-				version: version,
-				sql:     string(content),
-			})
+		log.Println("Migrations applied successfully")
+	} else if *downFlag {
+		if err := m.Down(); err != nil && err != migrate.ErrNoChange {
+			log.Fatal("Failed to rollback migrations:", err)
 		}
+		log.Println("Migrations rolled back successfully")
+	} else if *versionFlag > 0 {
+		if err := m.Migrate(uint(*versionFlag)); err != nil && err != migrate.ErrNoChange {
+			log.Fatal("Failed to migrate to version:", err)
+		}
+		log.Printf("Migration to version %d successful", *versionFlag)
+	} else {
+		log.Println("No migration action specified. Use -up, -down, or -version flags.")
 	}
-
-	// Sort migrations in ascending order
-	sort.Slice(migrations, func(i, j int) bool {
-		return migrations[i].version < migrations[j].version
-	})
-
-	return migrations, nil
-}
-
-func parseVersion(filename string) int {
-	var version int
-	fmt.Sscanf(filename, "%d_", &version)
-	return version
 }
