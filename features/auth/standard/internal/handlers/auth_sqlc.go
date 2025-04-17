@@ -1,15 +1,14 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
-	"myapp/internal/db"
-	"myapp/internal/initializers"
-	"myapp/internal/utils"
 	"net/http"
 	"os"
 	"strconv"
+	"myapp/internal/db"
+	"myapp/internal/initializers"
+	"myapp/internal/utils"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -55,8 +54,6 @@ func CustomRegister(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	// user := models.User{Email: body.Email, Password: string(hash), Name: body.Name}
-
 	verify, err := utils.VerifyEmail(body.Email)
 	if err != nil {
 		http.Error(w, "Failed to verify email", http.StatusBadRequest)
@@ -67,12 +64,6 @@ func CustomRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// result := initializers.DB.FirstOrCreate(&user, "email = ?", user.Email)
-	// if result.Error != nil {
-	// 	http.Error(w, "Failed to Create User", http.StatusBadRequest)
-	// 	return
-
-	// }
 	userStruct := db.CreateUserParams{
 		Email:       body.Email,
 		Password:    string(hash),
@@ -89,16 +80,10 @@ func CustomRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err != nil && err != sql.ErrNoRows {
-		// Handle other errors
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
 	// Create new user
 	_, err = db.New(initializers.DB).CreateUser(r.Context(), userStruct)
 	if err != nil {
-		log.Printf("Failed to create user: %v", err)
+		log.Printf("Failed to create user: %v (Details: %+v)", err, userStruct)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
@@ -256,28 +241,27 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save user to the database
-	// result := initializers.DB.FirstOrCreate(&userModel, "email = ?", userModel.Email)
-	// if result.Error != nil {
-	// 	http.Error(w, "Failed to Create User", http.StatusBadRequest)
-	// 	return
-
-	// }
 	userStruct := db.CreateUserParams{
 		Email:       user.Email,
+		Password:    "",
 		Name:        user.Name,
 		Resettoken:  "",
 		Tokenexpiry: pgtype.Timestamptz{Time: time.Time{}, Valid: true},
 	}
 
 	getUser, err := db.New(initializers.DB).GetUserEmail(r.Context(), user.Email)
+	if err == nil {
+		// User already exists
+
+		http.Error(w, "Email already registered", http.StatusBadRequest)
+		return
+	}
+
+	// Create new user
+	getUser, err = db.New(initializers.DB).CreateUser(r.Context(), userStruct)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// Handle the case where no user is found
-			db.New(initializers.DB).CreateUser(r.Context(), userStruct)
-		}
-		// Handle other potential errors
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("Failed to create user: %v (Details: %+v)", err, userStruct)
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
