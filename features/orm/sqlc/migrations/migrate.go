@@ -43,7 +43,7 @@ func main() {
 		dbUser, dbPassword, dbHost, dbPort, dbName)
 
 	// Create a new migrate instance
-	d, err := iofs.New(migrationFiles, "migrations")
+	d, err := iofs.New(migrationFiles, "db/migrations")
 	if err != nil {
 		log.Fatal("Failed to create migration source:", err)
 	}
